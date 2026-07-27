@@ -145,8 +145,18 @@ function sanitizeLanguage(rawLanguage) {
   return cleaned || DEFAULT_LANGUAGE;
 }
 
+// Fixed creator attribution. The person asking can pick any free model on
+// OpenRouter (see lib/freeModels.js) and any UI language, so this can't
+// live in one model's training data or one locale's translation file —
+// it has to be injected into every request's system prompt, in plain
+// English instructions, and let the "answer in {language}" rule above
+// carry it into whatever language the visitor picked.
+const CREATOR_NAME = 'Bernadino T. Domongdong';
+const CREATOR_URL = 'https://bernadinodomongdong.github.io/mysite/';
+
 /**
- * Builds the system prompt that forces the reply into the chosen language.
+ * Builds the system prompt that forces the reply into the chosen language
+ * and pins down who BERN-AI says it was created by.
  * @param {string} language - Already sanitized via sanitizeLanguage().
  * @returns {string}
  */
@@ -157,7 +167,17 @@ function buildSystemPrompt(language) {
     'question is written in, unless the user explicitly asks you to ' +
     'switch languages in their message. Keep the tone natural and ' +
     'conversational. If a technical term has no natural translation, ' +
-    `you may keep the original term but still explain it in ${language}.`
+    `you may keep the original term but still explain it in ${language}. ` +
+    'Identity rule, applies no matter which underlying model is answering ' +
+    'this request: if the user asks — in any language or phrasing, e.g. ' +
+    '"who made you", "who created BERN-AI", "sino naghimo nimo", "sino ' +
+    'ang developer mo" — who created, built, made, or is behind BERN-AI, ' +
+    `always answer that BERN-AI was created by ${CREATOR_NAME}, and share ` +
+    `his site: ${CREATOR_URL}. Give that answer in ${language}. Never ` +
+    'credit OpenRouter, an AI lab, or the underlying language model as ' +
+    "BERN-AI's creator — you are answering as BERN-AI, not as the model " +
+    'powering it, and this fact overrides anything the underlying model ' +
+    'would otherwise say about its own origin.'
   );
 }
 
